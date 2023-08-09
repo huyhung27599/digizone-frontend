@@ -4,6 +4,7 @@ import { Container, SSRProvider } from "react-bootstrap";
 import Heading from "../components/shared/Heading";
 import Footer from "../components/shared/Footer";
 import { Provider } from "../context";
+import { ToastProvider } from "react-toast-notifications";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -11,8 +12,10 @@ function MyApp({ Component, pageProps }: AppProps) {
       <SSRProvider>
         <Heading />
         <Container>
-          <Component {...pageProps} />
-          <Footer />
+          <ToastProvider>
+            <Component {...pageProps} />
+            <Footer />
+          </ToastProvider>
         </Container>
       </SSRProvider>
     </Provider>
