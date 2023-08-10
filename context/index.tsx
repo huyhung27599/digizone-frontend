@@ -16,11 +16,24 @@ type Context = {
     type: string;
     payload: Record<string, any> | undefined;
   }) => void;
+
+  cartItems: any;
+  cartDispatch: (action: {
+    type: string;
+    payload: Record<string, any>;
+  }) => void;
 };
 
 const initialContext: Context = {
   state: initialState,
   dispatch: () => {},
+  cartItems: [],
+  cartDispatch: function (action: {
+    type: string;
+    payload: Record<string, any>;
+  }): void {
+    throw new Error("Function not implemented");
+  },
 };
 
 const Context = createContext<Context>(initialContext);
@@ -41,8 +54,47 @@ const rootReducer = (
   }
 };
 
+const cartReducer = (
+  state: any,
+  action: { type: string; payload: Record<string, any> | undefined }
+) => {
+  switch (action.type) {
+    case "ADD_TO_CART":
+      const cartItems = [...state, action.payload];
+      window.localStorage.setItem("_digi_cart", JSON.stringify(cartItems));
+      return cartItems;
+    case "REMOVE_FROM_CART":
+      const newCartItems = state.filter(
+        (item: { skuId: string }) => item.skuId! == action.payload?.skuId
+      );
+      window.localStorage.setItem("_digi_cart", JSON.stringify(newCartItems));
+      return newCartItems;
+    case "UPDATE_CART":
+      const updatedCartItems = state.map((item: any) => {
+        if (item.skuId === action.payload?.skuId) {
+          return action.payload;
+        }
+        return item;
+      });
+      window.localStorage.setItem(
+        "_digi_cart",
+        JSON.stringify(updatedCartItems)
+      );
+      return updatedCartItems;
+    case "GET_CART_ITEMS":
+      return action.payload;
+    case "CLEAR_CART":
+      // clear cart from localStorage
+      window.localStorage.removeItem("_digi_cart");
+      return [];
+    default:
+      return state;
+  }
+};
+
 const Provider = ({ children }: Props) => {
   const [state, dispatch] = useReducer(rootReducer, initialState);
+  const [cartItems, cartDispatch] = useReducer(cartReducer, []);
 
   const router = useRouter();
 
@@ -99,7 +151,9 @@ const Provider = ({ children }: Props) => {
   }, []);
 
   return (
-    <Context.Provider value={{ state, dispatch }}>{children}</Context.Provider>
+    <Context.Provider value={{ state, dispatch, cartItems, cartDispatch }}>
+      {children}
+    </Context.Provider>
   );
 };
 
